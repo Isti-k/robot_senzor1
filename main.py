@@ -9,8 +9,8 @@ import Feladatok
 
 # főprogram
 oraifeladat = Feladatok.Feladatok()
-oraifeladat.aku2()
 #oraifeladat.vonalkovet()
+oraifeladat.feladatD()
 
-#oraifeladat.csipog()
+oraifeladat.csipog()
 

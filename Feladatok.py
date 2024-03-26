@@ -26,13 +26,13 @@ class Feladatok():
         # dupla motorkezelő
         self.robot = DriveBase(self.jm, self.bm, 55, 115)
 
-        #időzítő
-        self.ido=StopWatch()
+        # stopper óra
+        self.ido = StopWatch()
 
     def csipog(self):
         self.ev3.speaker.beep()
         
-    def vonalkovet(self):
+    """def vonalkovet(self):
         #felvátva hajtom a motorokat egyik gyorsabb másik lassabb ha letér csere
         while True:
             if self.cs.reflection() > 35:
@@ -40,51 +40,83 @@ class Feladatok():
                 self.jm.run(100)
             else:
                 self.jm.run(200)
-                self.bm.run(100)
+                self.bm.run(100)"""
 
-    def aku(self):
-        votl = self.ev3.battery.voltage()/1000
-        amper = self.ev3.battery.current()/1000
-
-        print("A feszültség értéke. "+str(votl)+"V.")
-        print("Az áramerőség: "+str(amper)+"A.")
-
-
-    def aku2(self):
-        votl = self.ev3.battery.voltage()/1000
-        amper = self.ev3.battery.current()/1000
-
-        self.ev3.screen.print("A feszültség értéke. \n"+str(votl)+"V.")
-        self.ev3.screen.print("Az áramerőség: \n"+str(amper)+"A.")
-        wait(1000)
-
-    def feladat1(self):
-        # asztallap széle: 59
-        # asztal széle felesem: 19
-        # asztal széle után: 0
+    def scanner(self):
+        #2. A robotképernyőn szeretném ha megjelenne a függőleges vonalak a mintának megfelelően.(scanner)
+        # Fényviszonyok:
         # fekete vonal: 9
-        ut = (59 + 19)/2
-        while self.cs.reflection() > ut:
-            self.robot.drive(100,0)
-            print("Visszavert fény: ", self.cs.reflection(),".")
-        self.robot.stop(Stop.BRAKE)
-
-
-
-    def feladat2(self):
+        # szürke asztal: 55
+        # asztalról le: 0
+        # félig asztalról le: 22
+        self.robot.drive(100,0)
         self.ido.reset()
-        ut = (59 + 19)/2
-        while self.cs.reflection() > ut:
+        hol = 0
+        while self.ido.time() < 3000:
+            if self.cs.reflection() < (55+9)/2:
+                self.ev3.screen.draw_line(hol,0,hol, 127)
+            hol += 1
+            wait(3000/178)
+        self.robot.stop(Stop.BREAK)
+        wait(10000)
+
+    def feladat1a(self):
+        # nem lát feketét addig megy
+        while self.cs.reflection() >(55+9)/2-26:
             self.robot.drive(100,0)
-            #print("Visszavert fény: ", self.cs.reflection(),".")
-        self.robot.stop(Stop.BRAKE)
-        elteltIdo = self.ido.time() # aktuális érték visszaadása
-        self.robot.drive(-100,0) # hátra
-        wait(elteltIdo)
+        self.robot.stop(Stop.BREAK)
+        # addig megy amíg feketét lát
+        while self.cs.reflection() <(55+9)/2-26:
+            self.robot.drive(100,0)
+        self.robot.stop(Stop.BREAK)
+    
+    def feladat2(self):
+        vege = False
+        fekete = False
+        self.robot.drive(100,0)
+        while not vege:
+            if self.cs.reflection() < (55+9)/2-18:
+                fekete = True
+            if fekete and self.cs.reflection() > (55+9)/2-9:
+                vege = True
         self.robot.stop(Stop.BRAKE)
 
+    def hanyvonal(self, db, seb, hatar):
+        for vonalakSzama in range(db):
+            vege = False
+            fekete = False
+            self.robot.drive(seb,0)
+            while not vege:
+                if self.cs.reflection() < hatar:
+                    fekete = True
+                if fekete and self.cs.reflection() > hatar+9:
+                    vege = True
+            self.robot.stop(Stop.BRAKE)
 
-    def feladat3():
-        while self.us.distance() > 100:
-            self.robot.drive(self.us.distance(), 0)
-        self.robot.stop(Stop.BRAKE)
+    def feladatB(self):
+        hatar = (55+9)/2-18
+        self.hanyvonal(3, 100, hatar)
+
+    def feladatC(self):
+        hatar = (55+9)/2-18
+        self.hanyvonal(3, -100, hatar)
+
+    def feladatD(self):
+        hosszok = []
+        self.robot.drive(50,0)
+        for vonalakSzama in range(3):
+            vege = False
+            fekete = False
+            self.ido.reset()
+            self.robot.drive(50,0)
+            while not vege:
+                if self.cs.reflection() < (55+9)/2-17 and not fekete:
+                    fekete = True
+                    self.ido.reset()
+                if fekete and self.cs.reflection() > (55+9)/2-9:
+                    vege = True
+                    hossz = self.ido.time()
+                    hosszok.append(hossz)
+            self.robot.stop(Stop.BRAKE)
+            print(hossz)
+        print(hosszok)
